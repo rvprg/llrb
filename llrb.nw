@@ -13,7 +13,19 @@
 \centerline{Roman Valiu\v{s}enko}
 \centerline{roman.valiusenko@gmail.com}
 
-@ \paragraph {Intro.} Red-black trees are self-balancing trees, also know as half-balanced tree, symmetric binary \mbox{B-trees}. By stipulating an additional requirement, namely that red-links always lean left, we gain simplification on insertion and deletion procedures \cite{Sedgewick2008, Sedgewick1978}. This data structure is called left-leaning red-black tree. We will maintain a one-to-one correspondence with~\mbox{2--3}~trees \cite{Sedgewick1983}. In those trees we have either 2-way or 3-way branching at each node (such nodes are called 2-node and 3-node respectively), and all external nodes appear on the same level. Essentially a left-leaning red-black tree is a 2--3~tree where red links are used to bind nodes together to form 3-nodes. Experimental results show that in a left-leaning red-black 2--3~tree built from~$N$ random keys a random successful search examines $\lg N-1/2$ nodes \cite{Sedgewick2008}.
+@ \paragraph {Intro.} Red-black trees are self-balancing trees, also know as
+half-balanced tree, symmetric binary \mbox{B-trees}. By stipulating an
+additional requirement, namely that red-links always lean left, we gain
+simplification on insertion and deletion procedures \cite{Sedgewick2008,
+Sedgewick1978}. This data structure is called left-leaning red-black tree. We
+will maintain a one-to-one correspondence with~\mbox{2--3}~trees
+\cite{Sedgewick1983}. In those trees we have either 2-way or 3-way branching at
+each node (such nodes are called 2-node and 3-node respectively), and all
+external nodes appear on the same level. Essentially a left-leaning red-black
+tree is a 2--3~tree where red links are used to bind nodes together to form
+3-nodes. Experimental results show that in a left-leaning red-black 2--3~tree
+built from~$N$ random keys a random successful search examines $\lg N-1/2$
+nodes \cite{Sedgewick2008}.
 
 The program will be written in Scheme programming language \cite{Sussman1996}.
 
@@ -25,7 +37,17 @@ The program will be written in Scheme programming language \cite{Sussman1996}.
 <<Remove maximum key procedure>>
 <<Remove procedure>>
 
-@ \paragraph {Tree node.} We will define a tree node in a message passing style, that is, a node will be a procedure that takes one argument and dispatch on its value. A node object will have [[left]] and [[right]] links, that will point to other nodes, just as in ordinary binary search tree; the node will also have [[data]] field to store data associated with [[key]]. Node provides getters and setters for each of these fields. Each node will be marked as either [[red]] or [[black]]\marginpar{\raggedright\scriptsize{\sl A dichromatic framework.}}, denoting the color of the link that goes from its parent to this node. A newly created node will always have [[color]] set to [[black]] and both links set to [[nil]]\footnote{We will use [[nil]] to reference an empty list in the text below. It plays a role of a sentinel node.}.
+@ \paragraph {Tree node.} We will define a tree node in a message passing
+style, that is, a node will be a procedure that takes one argument and dispatch
+on its value. A node object will have [[left]] and [[right]] links, that will
+point to other nodes, just as in ordinary binary search tree; the node will
+also have [[data]] field to store data associated with [[key]]. Node provides
+getters and setters for each of these fields. Each node will be marked as
+either [[red]] or [[black]]\marginpar{\raggedright\scriptsize{\sl A dichromatic
+framework.}}, denoting the color of the link that goes from its parent to this
+node. A newly created node will always have [[color]] set to [[black]] and both
+links set to [[nil]]\footnote{We will use [[nil]] to reference an empty list in
+the text below. It plays a role of a sentinel node.}.
 
 <<Tree node definition>>=
 (define (make-node data key)
@@ -47,7 +69,8 @@ The program will be written in Scheme programming language \cite{Sussman1996}.
 ((eq? m 'color) color)
 @
 
-@ The setters return another procedures, one for each node's field, that take one argument and bind the corresponding node field to the given argument. 
+@ The setters return another procedures, one for each node's field, that take
+one argument and bind the corresponding node field to the given argument. 
 
 <<Setters>>=
 ((eq? m 'set-color) (lambda (x) (set! color x)))
@@ -56,11 +79,24 @@ The program will be written in Scheme programming language \cite{Sussman1996}.
 ((eq? m 'set-right) (lambda (x) (set! right x)))
 @
 
-@ \paragraph{Helpers.} We will employ two simple tree transformations called {\it rotations} \cite{Adelson1962, Sedgewick1983, Cormen2009}. These transformations preserve symmetric order of the tree nodes (see image below). Such transformations are like applying the associative law to an algebraic formula, replacing $\alpha(\beta\gamma)$ by $(\alpha\beta)\gamma$ \cite{Knuth2008}.
+@ \paragraph{Helpers.} We will employ two simple tree transformations called
+{\it rotations} \cite{Adelson1962, Sedgewick1983, Cormen2009}. These
+transformations preserve symmetric order of the tree nodes (see image below).
+Such transformations are like applying the associative law to an algebraic
+formula, replacing $\alpha(\beta\gamma)$ by $(\alpha\beta)\gamma$
+\cite{Knuth2008}.
 
 \vskip 6pt{\centerline{\includegraphics[scale=0.8]{figures.1}}}
 
-We'll start off with rotation to the right procedure. The [[new-node]] is set to link to the left child of the current node [[node]] (this [[new-node]] will eventually replace [[node]]). In the image above [[new-node]] points to $y$, and [[node]] points to $x$. Now [[new-node]]'s right child (i.e.~$\beta$) becomes [[node]]'s left child, and [[node]] itself becomes [[new-node]]'s right child. Then we set [[new-node]] color to one that [[node]] had, and we set [[node]]'s---which is now right child of [[new-node]]---color to be [[red]] (because we are going to rotate 3-nodes only). The procedure returns [[new-node]] which is the node to be used instead of [[node]].
+We'll start off with rotation to the right procedure. The [[new-node]] is set
+to link to the left child of the current node [[node]] (this [[new-node]] will
+eventually replace [[node]]). In the image above [[new-node]] points to $y$,
+and [[node]] points to $x$. Now [[new-node]]'s right child (i.e.~$\beta$)
+becomes [[node]]'s left child, and [[node]] itself becomes [[new-node]]'s right
+child. Then we set [[new-node]] color to one that [[node]] had, and we set
+[[node]]'s---which is now right child of [[new-node]]---color to be [[red]]
+(because we are going to rotate 3-nodes only). The procedure returns
+[[new-node]] which is the node to be used instead of [[node]].
 
 <<Helper procedures>>=
 (define (rotate-right node)
@@ -72,7 +108,11 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
     new-node))
 @ %def rotate-right
 
-@ We will define rotation to the left in a symmetrical way. We could go ahead and merge these two procedures into one procedure and then define [[rotate-right]] and [[rotate-left]] in terms of that procedure by passing in appropriate getters and setters. However, I have chosen not to pursue that path.
+@ We will define rotation to the left in a symmetrical way. We could go ahead
+and merge these two procedures into one procedure and then define
+[[rotate-right]] and [[rotate-left]] in terms of that procedure by passing in
+appropriate getters and setters. However, I have chosen not to pursue that
+path.
 
 <<Helper procedures>>=
 (define (rotate-left node)
@@ -84,13 +124,15 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
     new-node))
 @ %def rotate-left
 
-@ We will also need an additional predicate procedure, [[is-red?]], which tests node's [[color]]. Color of [[nil]] is considered to be [[black]].
+@ We will also need an additional predicate procedure, [[is-red?]], which tests
+node's [[color]]. Color of [[nil]] is considered to be [[black]].
 
 <<Helper procedures>>=
 (define (is-red? n) (if (null? n) #f (eq? (n 'color) 'red)))
 @ %def is-red?
 
-@ A color flip operation inverts [[color]] for [[node]] and its children. This is essentially a {\it merge} and {\it split} operation in terms of 2--3~trees.
+@ A color flip operation inverts [[color]] for [[node]] and its children. This
+is essentially a {\it merge} and {\it split} operation in terms of 2--3~trees.
 
 <<Helper procedures>>=
 (define (color-flip node)
@@ -100,7 +142,16 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
   (flip (node 'right)))
 @ %def color-flip
 
-@ \paragraph{Insertion.} Since it's a binary search tree, we search down the tree as in ordinary BST, and once we hit the bottom, we insert the node \cite{Cormen2009}. Adding a new node may violate our LLRB~tree. (We might get unbalanced 4-nodes, i.e. two [[red]] links in a row, or have right-leaning red links.) The tree must be fixed so that is becomes a valid LLRB~tree again. We will do that via [[fix-up]] procedure.\marginpar{\raggedright\scriptsize{\sl Yes, [[fix-up]]! Wishful thinking \cite{Sussman1996}?}} Note that [[insert]] procedure takes as argument another procedure, [[compare]], which in turn takes two key values, $m$ and $n$, and returns $0$, $-1$, or $1$, depending on whether $m=n$, $m < n$, or~$m > n$ respectively.
+@ \paragraph{Insertion.} Since it's a binary search tree, we search down the
+tree as in ordinary BST, and once we hit the bottom, we insert the node
+\cite{Cormen2009}. Adding a new node may violate our LLRB~tree. (We might get
+unbalanced 4-nodes, i.e. two [[red]] links in a row, or have right-leaning red
+links.) The tree must be fixed so that is becomes a valid LLRB~tree again. We
+will do that via [[fix-up]] procedure.\marginpar{\raggedright\scriptsize{\sl
+Yes, [[fix-up]]! Wishful thinking \cite{Sussman1996}?}} Note that [[insert]]
+procedure takes as argument another procedure, [[compare]], which in turn takes
+two key values, $m$ and $n$, and returns $0$, $-1$, or $1$, depending on
+whether $m=n$, $m < n$, or~$m > n$ respectively.
 
 <<Insertion procedure>>=
 (define (insert node data key compare)
@@ -115,7 +166,19 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
   (insert-node node))
 @ %def insert
 
-@ After we have inserted a node we might end up with a tree that is not a LLRB tree. A newly created node is always [[red]]. Suppose it was added as right child, then we would have a right-leaning red link now. That can be corrected by rotation to the left. Suppose also that the parent node had been [[red]] as well, which means there would have been two [[red]] links in a row, making a 4-node. We would have had to split it (in terms of 2--3~trees). That can be achieved by rotation to the right first (i.e. to balance it) and a color flip (i.e. to actually split it). When we correct violations locally we might introduce violations globally, which need further corrections. So we traverse up the tree and do necessary transformations all the way up to the tree root. To recap: if we see a right-leaning [[red]] link, we rotate to the left. If we see two [[red]] links in a row, we rotate to the right. If both children are [[red]], we do a color flip (i.e. split 4-node).
+@ After we have inserted a node we might end up with a tree that is not a LLRB
+tree. A newly created node is always [[red]]. Suppose it was added as right
+child, then we would have a right-leaning red link now. That can be corrected
+by rotation to the left. Suppose also that the parent node had been [[red]] as
+well, which means there would have been two [[red]] links in a row, making a
+4-node. We would have had to split it (in terms of 2--3~trees). That can be
+achieved by rotation to the right first (i.e. to balance it) and a color flip
+(i.e. to actually split it). When we correct violations locally we might
+introduce violations globally, which need further corrections. So we traverse
+up the tree and do necessary transformations all the way up to the tree root.
+To recap: if we see a right-leaning [[red]] link, we rotate to the left. If we
+see two [[red]] links in a row, we rotate to the right. If both children are
+[[red]], we do a color flip (i.e. split 4-node).
 
 <<Helper procedures>>=
 (define (fix-up node)
@@ -129,7 +192,19 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
   node)
 @ %def fix-up
 
-@ \paragraph{Removing the minimum key.} Now let us take a look at how to remove the minimum key from the tree. We will use the same approach that is used for 2--3~trees, namely we will merge nodes on the way down the tree, so that current node is not a 2-node (for more on 2--3~trees see \cite{Hopcroft1983, Hopcroft1974}). If we maintain this invariant, once we reached the bottom, we can simply remove the key. When going down the left spine of the tree, we go to the left link each time, by calling [[remove-min-from]] recursively, however, before going to the left, we ensure that the invariant holds, i.e. we merge keys from parent nodes to their 2-node children either by taking a key from current 3-node to the child, or by borrowing key from 3-node sibling, when necessary. Again, we may need to fix the tree, and the same [[fix-up]] will do. This procedure returns a pair that contains new root of the tree and the removed element.
+@ \paragraph{Removing the minimum key.} Now let us take a look at how to remove
+the minimum key from the tree. We will use the same approach that is used for
+2--3~trees, namely we will merge nodes on the way down the tree, so that
+current node is not a 2-node (for more on 2--3~trees see \cite{Hopcroft1983,
+Hopcroft1974}). If we maintain this invariant, once we reached the bottom, we
+can simply remove the key. When going down the left spine of the tree, we go to
+the left link each time, by calling [[remove-min-from]] recursively, however,
+before going to the left, we ensure that the invariant holds, i.e. we merge
+keys from parent nodes to their 2-node children either by taking a key from
+current 3-node to the child, or by borrowing key from 3-node sibling, when
+necessary. Again, we may need to fix the tree, and the same [[fix-up]] will do.
+This procedure returns a pair that contains new root of the tree and the
+removed element.
 
 <<Remove minimum key procedure>>=
 (define (remove-min root)
@@ -144,7 +219,10 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
     (cons new-root min-elem)))
 @ %def remove-min
 
-@ And this is how we will maintain the invariant: We examine two consecutive left links and if they are both [[black]], we move red links to the left. But first, we will define a helper predicate, [[is-black?]], so that we could avoid verbose [[(not (is-red? ...))]] expressions.
+@ And this is how we will maintain the invariant: We examine two consecutive
+left links and if they are both [[black]], we move red links to the left. But
+first, we will define a helper predicate, [[is-black?]], so that we could avoid
+verbose [[(not (is-red? ...))]] expressions.
 
 <<Helper procedures>>=
 (define (is-black? n) (not (is-red? n)))
@@ -158,17 +236,29 @@ We'll start off with rotation to the right procedure. The [[new-node]] is set to
     <<Move red link to the left>>)
 @
 
-@ \paragraph{Moving red link to the left.} Let us consider the situation when current node is a 3-node and its first two children are not. In that case we simply merge it, producing a 4-node. Merging is accomplished by [[color-flip]]. This situation can be distinguished by looking at current node's left child [[color]]. It should be [[red]] and its right child's left link should be [[black]]:
+@ \paragraph{Moving red link to the left.} Let us consider the situation when
+current node is a 3-node and its first two children are not. In that case we
+simply merge it, producing a 4-node. Merging is accomplished by [[color-flip]].
+This situation can be distinguished by looking at current node's left child
+[[color]]. It should be [[red]] and its right child's left link should be
+[[black]]:
 
 \vskip 6pt{\centerline{\includegraphics[scale=0.8]{figures.2}}}
 
-The second case is more difficult, because $b$'s right child is a~3-node, that is $b$'s right child's left link {\sl is}~[[red]]. We rotate~$b$'s right child, a 3-node, to the right. Then we rotate~$b$ to the left, so that it is substituted with~$c$ now. Finally we [[color-flip]] to split the node. We get the following transformation:
+The second case is more difficult, because $b$'s right child is a~3-node, that
+is $b$'s right child's left link {\sl is}~[[red]]. We rotate~$b$'s right child,
+a 3-node, to the right. Then we rotate~$b$ to the left, so that it is
+substituted with~$c$ now. Finally we [[color-flip]] to split the node. We get
+the following transformation:
 
 \vskip 6pt{\centerline{\includegraphics[scale=0.8]{figures.3}}}
 
 Note that these transformations still preserve symmetric order of the tree.
 
-Now the transformation procedure is as follows. We do [[color-flip]] to merge nodes. Then we check if~$b$'s right child is~a 2-node by inspecting it's left link. If its [[red]], then this is a 3-node and we do two rotations and flip colors as described above.
+Now the transformation procedure is as follows. We do [[color-flip]] to merge
+nodes. Then we check if~$b$'s right child is~a 2-node by inspecting it's left
+link. If its [[red]], then this is a 3-node and we do two rotations and flip
+colors as described above.
 
 <<Helper procedures>>=
 (define (move-red-left node)
@@ -180,11 +270,16 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
   node)
 @ %def move-red-left
 
-@ The procedure above, [[move-red-left]], may return a different root after transformation. So we need to reset the node after we have applied the procedure. This completes [[remove-min]] procedure.
+@ The procedure above, [[move-red-left]], may return a different root after
+transformation. So we need to reset the node after we have applied the
+procedure. This completes [[remove-min]] procedure.
 
 <<Move red link to the left>>=
 (set! node (move-red-left node))
-@ \paragraph{Moving red link to the right.} We, again, maintain the invariant that current node is not a 2-node by merging and borrowing from sibling. Since the red links lean left [[move-red-right]] is even simpler than [[move-red-left]].
+@ \paragraph{Moving red link to the right.} We, again, maintain the invariant
+that current node is not a 2-node by merging and borrowing from sibling. Since
+the red links lean left [[move-red-right]] is even simpler than
+[[move-red-left]].
 
 <<Helper procedures>>=
 (define (move-red-right node)
@@ -195,7 +290,9 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
   node)
 @ %def move-red-right
 
-@ \paragraph{Removing the maximum key.} This procedure is very like [[remove-min]], except that it goes down the right spine of a tree, and it rotates left-leaning red links to the right.
+@ \paragraph{Removing the maximum key.} This procedure is very like
+[[remove-min]], except that it goes down the right spine of a tree, and it
+rotates left-leaning red links to the right.
 
 <<Remove maximum key procedure>>=
 (define (remove-max node)
@@ -211,7 +308,11 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
     (cons new-root max-elem)))
 @ %def remove-max
 
-@ We can detect the situation when we need to move red link to the right by looking at the right link of the current node, and, as opposite to the situation analyzed in [[remove-min]] procedure, to the left link of the right child, since the tree leans left. If these are both [[black]], we need to do the [[move-red-right]] transformation.
+@ We can detect the situation when we need to move red link to the right by
+looking at the right link of the current node, and, as opposite to the
+situation analyzed in [[remove-min]] procedure, to the left link of the right
+child, since the tree leans left. If these are both [[black]], we need to do
+the [[move-red-right]] transformation.
 
 <<Maintain invariant for [[remove-max]]>>=
 (if (and (is-black? (node 'right))
@@ -219,7 +320,20 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
     (set! node (move-red-right node)))
 @
 
-@ \paragraph{Removing arbitrary key.} Removing an arbitrary key is easy once we understood [[remove-max]] and [[remove-min]] procedures. On searching we do simple BST search except that when we are moving to the right, we move [[red]] link to the right when necessary, and when we are moving to the left, we move [[red]] link to the left when necessary. We detect these necessities by examining two consecutive links: Two left links in a row when moving to the left, and right and right child's left links when moving to the right. We also save parent's appropriate setter in [[transplant-proc]] so that we can {\it transplant} the node. That is, if we remove internal node, we substitute it with its {\it successor}, i.e. minimum key of the right subtree, via [[transplant-proc]]. The [[remove]] procedure is quite large, so we will break it into a few modules that will be described separately. Of course, we use [[fix-up]] to fix the tree after we have performed removal. Argument [[compare]] is the same procedure that we used in [[insert]] procedure.
+@ \paragraph{Removing arbitrary key.} Removing an arbitrary key is easy once we
+understood [[remove-max]] and [[remove-min]] procedures. On searching we do
+simple BST search except that when we are moving to the right, we move [[red]]
+link to the right when necessary, and when we are moving to the left, we move
+[[red]] link to the left when necessary. We detect these necessities by
+examining two consecutive links: Two left links in a row when moving to the
+left, and right and right child's left links when moving to the right. We also
+save parent's appropriate setter in [[transplant-proc]] so that we can {\it
+transplant} the node. That is, if we remove internal node, we substitute it
+with its {\it successor}, i.e. minimum key of the right subtree, via
+[[transplant-proc]]. The [[remove]] procedure is quite large, so we will break
+it into a few modules that will be described separately. Of course, we use
+[[fix-up]] to fix the tree after we have performed removal. Argument
+[[compare]] is the same procedure that we used in [[insert]] procedure.
 
 <<Remove procedure>>=
 (define (remove root key compare)
@@ -236,12 +350,16 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
     (cons new-root removed-node)))
 @ %def remove
 
-@ We will need a couple of variables. One that will be used to reference removed node, and the second to point to the procedure that will set appropriate child links in the parent of a node.
+@ We will need a couple of variables. One that will be used to reference
+removed node, and the second to point to the procedure that will set
+appropriate child links in the parent of a node.
 
 <<Internal remove procedure definitions>>=
 (define removed-node '())
 (define transplant-proc '())
-@ We better define a local helper procedure for tree traversal. This procedure will do two things: Set [[transplant-proc]] appropriately, and go the given link of a node. Argument [[link]] must be either [['right]] or [['left]].
+@ We better define a local helper procedure for tree traversal. This procedure
+will do two things: Set [[transplant-proc]] appropriately, and go the given
+link of a node. Argument [[link]] must be either [['right]] or [['left]].
 
 <<Internal remove procedure helper methods>>=
 (define (proceed-with node link)
@@ -249,7 +367,10 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
   ((node (if (eq? link 'left) 'set-left 'set-right)) (remove-node (node link))) node)
 @
 
-@ Now we will define two separate procedures for left and right subtrees of a node. When we go to the left subtree, we look for two left [[black]] links in a row, if there are any, we do [[move-red-left]], in the same way as in [[remove-min]] procedure.
+@ Now we will define two separate procedures for left and right subtrees of a
+node. When we go to the left subtree, we look for two left [[black]] links in a
+row, if there are any, we do [[move-red-left]], in the same way as in
+[[remove-min]] procedure.
 
 <<Definition of [[go-to-left-subtree]]>>=
 (define (go-to-left-subtree node)
@@ -259,7 +380,16 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
   (proceed-with node 'left))
 @
 
-@ If we go to the right subtree of a tree though, we first check, if we are at a 3-node and whether it leans left. If it is a 3-node and it does lean left, we need to rotate it to the right. Next, we check for two [[red]]s links in a row. However, now it's not a straight line situation as in [[go-to-left-subtree]], but is a ``zig-zag'', because our [[red]] links lean left. So we check [[color]] of right and right child left links. If they are both [[black]], we do [[move-red-right]] to ensure that our next node won't be a 2-node. But there's more: We compare [[key]]s again. If they match, we remove the node by substituting it with the successor node, that is the minimum node of current node's right subtree. Otherwise we search further, i.e. go the right subtree.
+@ If we go to the right subtree of a tree though, we first check, if we are at
+a 3-node and whether it leans left. If it is a 3-node and it does lean left, we
+need to rotate it to the right. Next, we check for two [[red]]s links in a row.
+However, now it's not a straight line situation as in [[go-to-left-subtree]],
+but is a ``zig-zag'', because our [[red]] links lean left. So we check
+[[color]] of right and right child left links. If they are both [[black]], we
+do [[move-red-right]] to ensure that our next node won't be a 2-node. But
+there's more: We compare [[key]]s again. If they match, we remove the node by
+substituting it with the successor node, that is the minimum node of current
+node's right subtree. Otherwise we search further, i.e. go the right subtree.
 
 <<Definition of [[go-to-right-subtree]]>>=
 (define (go-to-right-subtree node)
@@ -275,7 +405,11 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
         node)))
 @
 
-@ We use [[remove-min]] procedure to get the successor node. It will be removed from the right subtree of the current node. Then we use [[transplant-proc]] to correct parent's appropriate link so that it points to the successor. We also set [[removed-node]] to the removed node. Then we return, and [[fix-up]] fixes the tree. This completes the removal procedure.
+@ We use [[remove-min]] procedure to get the successor node. It will be removed
+from the right subtree of the current node. Then we use [[transplant-proc]] to
+correct parent's appropriate link so that it points to the successor. We also
+set [[removed-node]] to the removed node. Then we return, and [[fix-up]] fixes
+the tree. This completes the removal procedure.
 
 <<Substitute with the successor node>>=
 (let* ((minimum (remove-min (node 'right)))
@@ -292,17 +426,54 @@ Now the transformation procedure is as follows. We do [[color-flip]] to merge no
 
 @ 
 \newpage
-\paragraph {Tree drawing.} Drawing a binary tree is almost trivial, but I have decided to include this little informal description of the algorithm that I came up with for drawing. I didn't need putting [[key]] values in the nodes, I just wanted to see the overall structure of a tree. The idea is to generate auxiliary data for {\MP} using which it will be easy to write a loop that draws a tree.
+\paragraph {Tree drawing.} Drawing a binary tree is almost trivial, but I have
+decided to include this little informal description of the algorithm that I
+came up with for drawing. I didn't need putting [[key]] values in the nodes, I
+just wanted to see the overall structure of a tree. The idea is to generate
+auxiliary data for {\MP} using which it will be easy to write a loop that draws
+a tree.
 
-Of course, I could have used a graph visualizations tool like graphviz, but in this particular case I didn't need that heavy machinery. Besides, I didn't like results it produced. The algorithm that I came up with is easy, it's just a few lines of code, and I'm more than happy with the results I got.
+Of course, I could have used a graph visualizations tool like graphviz, but in
+this particular case I didn't need that heavy machinery. Besides, I didn't like
+results it produced. The algorithm that I came up with is easy, it's just a few
+lines of code, and I'm more than happy with the results I got.
 
-We initialize three numeric arrays of $N$ sizes, where $N$ is the number of nodes in a tree. One of the arrays, $d$, holds {\it depth} values for each node. In other words, $d$ maps a sequence of nodes $n_0,n_1,\ldots,n_N$, $0 \le k \le N-1$, gotten from traversing the tree in a symmetrical order, to the depths of those nodes. (Depth of the root node is $0$, depths of root's children is $1$ etc.) Let $d_k$ be the depth of the~$k$th node~$n_k$ in that sequence. Using this data we can easily determine location $(x, y)$ of~a node~$n_k$. To determine the~$x$ component we simply multiply~$k$ by the ``width'' parameter, $w$, since~$k$ means that there are~$k$ nodes to the left (all nodes, not just subtree nodes). The parameter~$w$ determines how far nodes are placed from each other. The larger this value the more the tree ``breathes''. Generally, it should be slightly larger than the width of a node. The~$y$ component can be computed easily as well:~It's~$d_k$ times parameter~$h$. The parameter~$h$ determines how far tree levels are from each other. The larger this value the higher the tree. Initialization of array~$d$ is trivial.
+We initialize three numeric arrays of $N$ sizes, where $N$ is the number of
+nodes in a tree. One of the arrays, $d$, holds {\it depth} values for each
+node. In other words, $d$ maps a sequence of nodes $n_0,n_1,\ldots,n_N$, $0 \le
+k \le N-1$, gotten from traversing the tree in a symmetrical order, to the
+depths of those nodes. (Depth of the root node is $0$, depths of root's
+children is $1$ etc.) Let $d_k$ be the depth of the~$k$th node~$n_k$ in that
+sequence. Using this data we can easily determine location $(x, y)$ of~a
+node~$n_k$. To determine the~$x$ component we simply multiply~$k$ by the
+``width'' parameter, $w$, since~$k$ means that there are~$k$ nodes to the left
+(all nodes, not just subtree nodes). The parameter~$w$ determines how far nodes
+are placed from each other. The larger this value the more the tree
+``breathes''. Generally, it should be slightly larger than the width of a node.
+The~$y$ component can be computed easily as well:~It's~$d_k$ times
+parameter~$h$. The parameter~$h$ determines how far tree levels are from each
+other. The larger this value the higher the tree. Initialization of array~$d$
+is trivial.
 
-Location of any node~$n_k$, $0 \le k \le N-1$, is $(k\cdot w, d_k\cdot h)$, if we have~$d$ initialized as described above. But we also need to draw edges. In order to do that we need to know location of node's parent. We introduce another auxiliary array~$p$. It maps node~$n_k$ to its parent node. So we can calculate location of a parent node as $(p_k \cdot w, d_{p_k} \cdot h)_{p_k}$; and we can draw an edge as a line between two points $(k\cdot w, d_k\cdot h)$ and $(p_k \cdot w, d_{p_k} \cdot h)$.
+Location of any node~$n_k$, $0 \le k \le N-1$, is $(k\cdot w, d_k\cdot h)$, if
+we have~$d$ initialized as described above. But we also need to draw edges. In
+order to do that we need to know location of node's parent. We introduce
+another auxiliary array~$p$. It maps node~$n_k$ to its parent node. So we can
+calculate location of a parent node as $(p_k \cdot w, d_{p_k} \cdot h)_{p_k}$;
+and we can draw an edge as a line between two points $(k\cdot w, d_k\cdot h)$
+and $(p_k \cdot w, d_{p_k} \cdot h)$.
 
-We can initialize $p$ at the same time when traversing the tree and initializing array~$d$. Calculating~$p_k$ for the given~$n_k$ depends on whether~$n_k$ is left or right child of~$n_{p_k}$. If~$n_k$ is the left child, then we set $p_k \leftarrow k+(c_r+1)$, where~$c_r$ is the number of nodes in the right subtree of~$n_k$. If, however,~$n_k$ is the right child, then $p_k \leftarrow k-(c_l+1)$, where~$c_l$ is the number of nodes in the left subtree of node~$n_k$.
+We can initialize $p$ at the same time when traversing the tree and
+initializing array~$d$. Calculating~$p_k$ for the given~$n_k$ depends on
+whether~$n_k$ is left or right child of~$n_{p_k}$. If~$n_k$ is the left child,
+then we set $p_k \leftarrow k+(c_r+1)$, where~$c_r$ is the number of nodes in
+the right subtree of~$n_k$. If, however,~$n_k$ is the right child, then $p_k
+\leftarrow k-(c_l+1)$, where~$c_l$ is the number of nodes in the left subtree
+of node~$n_k$.
 
-Finally, the array~$c$ holds colors of the nodes, so that we can draw edges differently, depending on node's color. If~$n_k$ is red then $c_k=1$, and $c_k=0$ if it's not.
+Finally, the array~$c$ holds colors of the nodes, so that we can draw edges
+differently, depending on node's color. If~$n_k$ is red then $c_k=1$, and
+$c_k=0$ if it's not.
 
 A few random LLRB trees (16, 32, 64, and 128 nodes):
 
